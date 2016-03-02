@@ -61,6 +61,7 @@ public class MainActivity extends AppCompatActivity
             public boolean onMenuItemClick(MenuItem item) {
                 switch (item.getItemId()) {
                     case R.id.refresh:
+                        notMore = false;
                         mSwipeRecyclerView.onRefreshLoad();
                         break;
                     case R.id.empty:
@@ -113,30 +114,25 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void getData(final String action) {
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                mAdapter.notifyDataSetChanged();
-                switch (action) {
-                    case "NULL":
-                        List<String> list = setList(0);
-                        mAdapter.getDataList().clear();
-                        mAdapter.getDataList().addAll(list);
-                        mSwipeRecyclerView.onRefreshComplete(list.size(), true);
-                        break;
-                    case "UP":
-                        list = setUpList(mAdapter.getFirstNumber());
-                        mAdapter.getDataList().addAll(0, list);
-                        mSwipeRecyclerView.onRefreshComplete(list.size(), false);
-                        break;
-                    case "DOWN":
-                        list = setList(mAdapter.getLastNumber() + 1);
-                        mAdapter.getDataList().addAll(list);
-                        mSwipeRecyclerView.onLoadMoreComplete(list.size());
-                        break;
-                }
-            }
-        }, 3000);
+        mAdapter.notifyDataSetChanged();
+        switch (action) {
+            case "NULL":
+                List<String> list = setList(0);
+                mAdapter.getDataList().clear();
+                mAdapter.getDataList().addAll(list);
+                mSwipeRecyclerView.onRefreshComplete(list.size(), true);
+                break;
+            case "UP":
+                list = setUpList(mAdapter.getFirstNumber());
+                mAdapter.getDataList().addAll(0, list);
+                mSwipeRecyclerView.onRefreshComplete(list.size(), false);
+                break;
+            case "DOWN":
+                list = setList(mAdapter.getLastNumber() + 1);
+                mAdapter.getDataList().addAll(list);
+                mSwipeRecyclerView.onLoadMoreComplete(list.size());
+                break;
+        }
     }
 
     private List<String> setList(int start) {
