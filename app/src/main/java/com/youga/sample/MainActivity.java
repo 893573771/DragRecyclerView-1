@@ -143,7 +143,7 @@ public class MainActivity extends AppCompatActivity
                     case "UP":
                         list = setUpList(mAdapter.getFirstNumber());
                         mAdapter.getDataList().addAll(0, list);
-                        mDragRecyclerView.onDragState(list.size());
+                        mAdapter.notifyDataSetChanged();
                         break;
                     case "DOWN":
                         list = setList(mAdapter.getLastNumber() + 1);
@@ -170,7 +170,7 @@ public class MainActivity extends AppCompatActivity
 
     private List<String> setUpList(int start) {
         List<String> dataList = new ArrayList<>();
-        for (int i = start - 20; i < 20; i++) {
+        for (int i = start - 10; i < 10; i++) {
             dataList.add(String.valueOf(i));
         }
         return dataList;
