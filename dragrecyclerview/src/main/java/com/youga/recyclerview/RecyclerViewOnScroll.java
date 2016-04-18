@@ -6,9 +6,7 @@ import android.util.Log;
 import java.util.Timer;
 import java.util.TimerTask;
 
-/**
- * Created by WuXiaolong on 2015/7/7.
- */
+
 public class RecyclerViewOnScroll extends RecyclerView.OnScrollListener {
 
     private static final String TAG = "RecyclerViewOnScroll";
@@ -78,7 +76,6 @@ public class RecyclerViewOnScroll extends RecyclerView.OnScrollListener {
                     }
                 }, 1000);
                 if (mDeprecatedY != 0 && mRealY - mDeprecatedY > 500) {
-                    Log.i(TAG, "快速滑动");
                     if (mListener != null) mListener.onFastScroll();
                 }
                 break;
