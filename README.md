@@ -23,4 +23,5 @@ compile 'com.youga.recyclerview:dragrecyclerview:1.0.0'
 * versionName '1.0.0'
 
 # 关于作者
-Email: YougaKingWu@gmail.com
+* QQ交流群:158506055
+* Email: YougaKingWu@gmail.com
