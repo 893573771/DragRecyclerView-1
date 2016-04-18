@@ -9,7 +9,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_vertical"
-        android:indeterminateDrawable="@drawable/foot_view_progress"
-        android:indeterminateDuration="1000" />
+        android:indeterminateDuration="700" />
 
 </LinearLayout>

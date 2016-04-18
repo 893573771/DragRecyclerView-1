@@ -1,4 +1,4 @@
-package com.youga.swiperecyclerview.adapter;
+package com.youga.recyclerview.adapter;
 
 
 import android.os.Handler;
@@ -16,9 +16,9 @@ import android.widget.TextView;
 
 import android.view.ViewGroup.LayoutParams;
 
-import com.youga.swiperecyclerview.SwipeRecyclerView.OnSwipeListener;
-import com.youga.swiperecyclerview.SwipeRecyclerView.OnItemClickListener;
-import com.youga.swiperecyclerview.R;
+import com.youga.recyclerview.R;
+import com.youga.recyclerview.DragRecyclerView.OnDragListener;
+import com.youga.recyclerview.DragRecyclerView.OnItemClickListener;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -34,27 +34,26 @@ public class RecyclerAdapter extends RecyclerWrapper {
     private String[] mTips = new String[2];
     private DisplayMetrics mMetrics;
 
+    //STATE_DEFAULT is show Item
+    public static final int STATE_DEFAULT = -904291158;
     public static final int STATE_LOADING = 904291159;
     public static final int STATE_EMPTY = 904291160;
     public static final int STATE_ERROR = 904291161;
+    public static final int STATE_FOOT = 904291162;
 
-    public static final int TYPE_ITEM = 904291162;
-    public static final int TYPE_FOOT = 904291163;
-
-    @IntDef({FOOT_GONE, FOOT_LOAD, FOOT_FAULT, FOOT_NOT_MORE})
+    @IntDef({FOOT_MORE, FOOT_NOT_MORE, FOOT_FAULT})
     @Retention(RetentionPolicy.SOURCE)
     public @interface FootState {
     }
 
-    public static final int FOOT_GONE = 904291164;
-    public static final int FOOT_LOAD = 904291165;
+    public static final int FOOT_MORE = 904291164;
+    public static final int FOOT_NOT_MORE = 904291165;
     public static final int FOOT_FAULT = 904291166;
-    public static final int FOOT_NOT_MORE = 904291167;
 
-    private int mState = STATE_LOADING;
-    private int mFootState = FOOT_GONE;
+    private int mState = STATE_DEFAULT;
+    private int mFootState = FOOT_MORE;
 
-    private OnSwipeListener mOnSwipeListener;
+    private OnDragListener mOnDragListener;
     private OnItemClickListener mOnItemClickListener;
     private boolean mLoadMore;
     private LayoutParams mLayoutParams;
@@ -72,21 +71,21 @@ public class RecyclerAdapter extends RecyclerWrapper {
     }
 
     public void showLoadingView() {
-        setState(RecyclerAdapter.STATE_LOADING);
+        setState(STATE_LOADING);
     }
 
     public void showEmptyView(@NonNull String emptyTips) {
         mTips[0] = emptyTips;
-        setState(RecyclerAdapter.STATE_EMPTY);
+        setState(STATE_EMPTY);
     }
 
     public void showErrorView(@NonNull String errorTips) {
         mTips[1] = errorTips;
-        setState(RecyclerAdapter.STATE_ERROR);
+        setState(STATE_ERROR);
     }
 
     public void showItemView() {
-        setState(-904291158);
+        setState(STATE_DEFAULT);
     }
 
     @Override
@@ -97,7 +96,7 @@ public class RecyclerAdapter extends RecyclerWrapper {
             case STATE_ERROR:
                 return 1;
             default:
-                return mLoadMore && getSuperItemCount() > 0 && mFootState != FOOT_NOT_MORE ? getSuperItemCount() + 1 : getSuperItemCount();
+                return mLoadMore && mFootState != FOOT_NOT_MORE && getSuperItemCount() > 0 ? getSuperItemCount() + 1 : getSuperItemCount();
         }
     }
 
@@ -113,7 +112,7 @@ public class RecyclerAdapter extends RecyclerWrapper {
             case STATE_ERROR:
                 return mState;
             default:
-                return position == getSuperItemCount() ? TYPE_FOOT : TYPE_ITEM;
+                return mLoadMore && position == getSuperItemCount() ? STATE_FOOT : super.getItemViewType(position);
         }
     }
 
@@ -127,9 +126,8 @@ public class RecyclerAdapter extends RecyclerWrapper {
                 return new EmptyViewHolder(View.inflate(parent.getContext(), R.layout.empty, null));
             case STATE_ERROR:
                 return new ErrorViewHolder(View.inflate(parent.getContext(), R.layout.error, null));
-            case TYPE_FOOT:
+            case STATE_FOOT:
                 return new FootViewHolder(View.inflate(parent.getContext(), R.layout.foot_view, null));
-            case TYPE_ITEM:
             default:
                 return super.onCreateViewHolder(parent, viewType);
         }
@@ -148,12 +146,15 @@ public class RecyclerAdapter extends RecyclerWrapper {
             LayoutParams params = new LayoutParams(getLayoutParams().width, height);
             holder.itemView.setLayoutParams(params);
             FootViewHolder footHolder = (FootViewHolder) holder;
-            if (mFootState == FOOT_GONE) {
-                footHolder.load();
-            } else if (mFootState == FOOT_FAULT) {
-                footHolder.fault();
-            } else {
-                Log.i(TAG, "footHolder state is FOOT_LOAD");
+            switch (mFootState) {
+                case FOOT_MORE:
+                    footHolder.load();
+                    Log.i(TAG, " footHolder.load()");
+                    break;
+                case FOOT_FAULT:
+                    footHolder.fault();
+                    Log.i(TAG, " footHolder.fault()");
+                    break;
             }
         } else {
             if (mOnItemClickListener != null)
@@ -212,7 +213,7 @@ public class RecyclerAdapter extends RecyclerWrapper {
 
         public void load() {
             bindLoadMore();
-            mFootState = FOOT_LOAD;
+            mFootState = -904291163;//loading
             mFootViewLoading.setVisibility(View.VISIBLE);
             mFootViewFault.setVisibility(View.INVISIBLE);
         }
@@ -223,11 +224,11 @@ public class RecyclerAdapter extends RecyclerWrapper {
         }
 
         public void bindLoadMore() {
-            if (mOnSwipeListener != null && mFootState != FOOT_LOAD)
+            if (mOnDragListener != null)
                 mHandler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        mOnSwipeListener.onLoadMore();
+                        mOnDragListener.onLoadMore();
                     }
                 }, 1000);
         }
@@ -239,8 +240,8 @@ public class RecyclerAdapter extends RecyclerWrapper {
         notifyDataSetChanged();
     }
 
-    public void setOnSwipeListener(OnSwipeListener onSwipeListener) {
-        this.mOnSwipeListener = onSwipeListener;
+    public void setOnDragListener(OnDragListener onDragListener) {
+        this.mOnDragListener = onDragListener;
     }
 
     public void setOnItemClickListener(OnItemClickListener onItemClickListener) {

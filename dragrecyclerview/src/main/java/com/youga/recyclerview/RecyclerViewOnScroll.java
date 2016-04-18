@@ -1,4 +1,4 @@
-package com.youga.swiperecyclerview;
+package com.youga.recyclerview;
 
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -14,9 +14,15 @@ public class RecyclerViewOnScroll extends RecyclerView.OnScrollListener {
     private static final String TAG = "RecyclerViewOnScroll";
     private Timer mTimer;
     private int mRealY, mDeprecatedY;
-    private OnFastScrollListener mListener;
+    private OnScrollListener mListener;
 
-    public RecyclerViewOnScroll(OnFastScrollListener listener) {
+    private static final float HIDE_THRESHOLD = 100;
+    private static final float SHOW_THRESHOLD = 50;
+
+    int scrollDist = 0;
+    private boolean isVisible = true;
+
+    public RecyclerViewOnScroll(OnScrollListener listener) {
         mTimer = new Timer();
         this.mListener = listener;
     }
@@ -30,6 +36,28 @@ public class RecyclerViewOnScroll extends RecyclerView.OnScrollListener {
             mRealY = 0;
             mDeprecatedY = 0;
         }
+
+        //  Check scrolled distance against the minimum
+        if (isVisible && scrollDist > HIDE_THRESHOLD) {
+            //  Hide fab & reset scrollDist
+            if (mListener != null) mListener.hide();
+            scrollDist = 0;
+            isVisible = false;
+        }
+        //  -MINIMUM because scrolling up gives - dy values
+        else if (!isVisible && scrollDist < -SHOW_THRESHOLD) {
+            //  Show fab & reset scrollDist
+            if (mListener != null) mListener.show();
+
+            scrollDist = 0;
+            isVisible = true;
+        }
+
+        //  Whether we scroll up or down, calculate scroll distance
+        if ((isVisible && dy > 0) || (!isVisible && dy < 0)) {
+            scrollDist += dy;
+        }
+
     }
 
     @Override
@@ -57,7 +85,11 @@ public class RecyclerViewOnScroll extends RecyclerView.OnScrollListener {
         }
     }
 
-    public interface OnFastScrollListener {
+    public interface OnScrollListener {
         void onFastScroll();
+
+        void hide();
+
+        void show();
     }
 }

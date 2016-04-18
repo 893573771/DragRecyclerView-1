@@ -1,4 +1,4 @@
-# SwipeRecyclerView
+# DragRecyclerView
 
 
 ![主页](https://github.com/YougaKing/SwipeRecyclerView/blob/master/haha.gif)

@@ -1,4 +1,4 @@
-package com.youga.swiperecyclerview.adapter;
+package com.youga.recyclerview.adapter;
 
 /**
  * Created by Youga on 2015/9/2.

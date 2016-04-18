@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.youga.swiperecyclerview">
+    package="com.youga.recyclerview">
 
     <application
         android:allowBackup="true"
