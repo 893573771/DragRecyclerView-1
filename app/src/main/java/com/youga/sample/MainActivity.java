@@ -162,7 +162,7 @@ public class MainActivity extends AppCompatActivity
 
     private List<String> setList(int start) {
         List<String> dataList = new ArrayList<>();
-        for (int i = start; i < (notMore ? 10 : 20 + start); i++) {
+        for (int i = start; i < (notMore ? 9 : 10 + start); i++) {
             dataList.add(String.valueOf(i));
         }
         return dataList;
