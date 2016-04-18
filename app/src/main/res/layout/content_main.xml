@@ -12,8 +12,16 @@
     tools:context="com.youga.sample.MainActivity"
     tools:showIn="@layout/app_bar_main">
 
-    <com.youga.swiperecyclerview.SwipeRecyclerView
-        android:id="@+id/pullLoadMoreRecyclerView"
+    <android.support.v4.widget.SwipeRefreshLayout
+        android:id="@+id/swipeRefreshLayout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent">
+
+        <com.youga.recyclerview.DragRecyclerView
+            android:id="@+id/dragRecyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+    </android.support.v4.widget.SwipeRefreshLayout>
+
 </RelativeLayout>

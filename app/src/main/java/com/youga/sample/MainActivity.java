@@ -1,9 +1,9 @@
 package com.youga.sample;
 
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -13,8 +13,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
-import com.youga.swiperecyclerview.SwipeRecyclerView;
+
+import com.youga.recyclerview.DragRecyclerView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,10 +24,11 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
-    private SwipeRecyclerView mSwipeRecyclerView;
+    private DragRecyclerView mDragRecyclerView;
     private RecyclerViewAdapter mAdapter;
     private Toolbar toolbar;
     private boolean notMore;
+    private SwipeRefreshLayout mSwipeRefreshLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,41 +65,50 @@ public class MainActivity extends AppCompatActivity
                 switch (item.getItemId()) {
                     case R.id.refresh:
                         notMore = false;
-                        mSwipeRecyclerView.onRefreshLoad();
+                        getData("NULL");
+                        mDragRecyclerView.showLoadingView();
                         break;
                     case R.id.empty:
                         mAdapter.getDataList().clear();
-                        mSwipeRecyclerView.showEmptyView("神马都没有");
+                        mDragRecyclerView.showEmptyView("神马都没有");
                         break;
                     case R.id.error:
                         mAdapter.getDataList().clear();
-                        mSwipeRecyclerView.showErrorView("网络连接错误");
+                        mDragRecyclerView.showErrorView("网络连接错误");
                         break;
                     case R.id.not_more:
-                        mSwipeRecyclerView.onRefreshLoad();
+                        mDragRecyclerView.showLoadingView();
                         notMore = true;
+                        getData("NULL");
                         break;
                 }
                 return false;
             }
         });
 
-        mSwipeRecyclerView = (SwipeRecyclerView) findViewById(R.id.pullLoadMoreRecyclerView);
+        mDragRecyclerView = (DragRecyclerView) findViewById(R.id.dragRecyclerView);
+        mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipeRefreshLayout);
 
         mAdapter = new RecyclerViewAdapter(this, null);
-        mSwipeRecyclerView.setAdapter(mAdapter);
-        mSwipeRecyclerView.initToolbar(toolbar);
+        mDragRecyclerView.setAdapter(mAdapter, true);
+        mDragRecyclerView.initToolbar(toolbar);
+        mDragRecyclerView.showLoadingView();
 
-        mSwipeRecyclerView.setOnSwipeListener(new SwipeRecyclerView.OnSwipeListener() {
+        getData("NULL");
+
+        mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
-            public void onRefresh(boolean refresh) {
-                if (refresh) {
+            public void onRefresh() {
+                if (mAdapter.getItemCount() == 0) {
                     getData("NULL");
                 } else {
                     getData("UP");
                 }
             }
+        });
 
+
+        mDragRecyclerView.setOnDragListener(new DragRecyclerView.OnDragListener() {
             @Override
             public void onLoadMore() {
                 notMore = false;
@@ -104,35 +116,48 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
-        mSwipeRecyclerView.setOnItemClickListener(new SwipeRecyclerView.OnItemClickListener() {
+
+        mDragRecyclerView.setOnItemClickListener(new DragRecyclerView.OnItemClickListener() {
             @Override
             public void onItemClick(View view, int position) {
-
+                Toast.makeText(MainActivity.this, "position:" + position, Toast.LENGTH_SHORT).show();
             }
         });
-
     }
 
     private void getData(final String action) {
-        mAdapter.notifyDataSetChanged();
-        switch (action) {
-            case "NULL":
-                List<String> list = setList(0);
-                mAdapter.getDataList().clear();
-                mAdapter.getDataList().addAll(list);
-                mSwipeRecyclerView.onRefreshComplete(list.size(), true);
-                break;
-            case "UP":
-                list = setUpList(mAdapter.getFirstNumber());
-                mAdapter.getDataList().addAll(0, list);
-                mSwipeRecyclerView.onRefreshComplete(list.size(), false);
-                break;
-            case "DOWN":
-                list = setList(mAdapter.getLastNumber() + 1);
-                mAdapter.getDataList().addAll(list);
-                mSwipeRecyclerView.onLoadMoreComplete(list.size());
-                break;
+        if (!"DOWN".equals(action)) {
+            mSwipeRefreshLayout.setEnabled(false);
+            mSwipeRefreshLayout.setRefreshing(true);
         }
+        mSwipeRefreshLayout.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                switch (action) {
+                    case "NULL":
+                        List<String> list = setList(0);
+                        mAdapter.getDataList().clear();
+                        mAdapter.getDataList().addAll(list);
+                        mDragRecyclerView.onDragState(list.size());
+                        break;
+                    case "UP":
+                        list = setUpList(mAdapter.getFirstNumber());
+                        mAdapter.getDataList().addAll(0, list);
+                        mDragRecyclerView.onDragState(list.size());
+                        break;
+                    case "DOWN":
+                        list = setList(mAdapter.getLastNumber() + 1);
+                        mAdapter.getDataList().addAll(list);
+                        mDragRecyclerView.onDragState(list.size());
+                        break;
+                }
+                if (!"DOWN".equals(action)) {
+                    mSwipeRefreshLayout.setEnabled(true);
+                    mSwipeRefreshLayout.setRefreshing(false);
+                }
+            }
+        }, 1000);
+
     }
 
     private List<String> setList(int start) {
