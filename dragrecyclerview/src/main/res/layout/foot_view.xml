@@ -5,7 +5,7 @@
     android:layout_gravity="bottom">
 
     <LinearLayout
-        android:id="@+id/footView_loading"
+        android:id="@+id/view_loading"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:gravity="center_horizontal">
@@ -21,7 +21,7 @@
     </LinearLayout>
 
     <LinearLayout
-        android:id="@+id/footView_fault"
+        android:id="@+id/view_fault"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:gravity="center_horizontal"

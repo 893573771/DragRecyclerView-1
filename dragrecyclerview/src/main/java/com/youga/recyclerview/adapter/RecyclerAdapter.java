@@ -1,17 +1,21 @@
 package com.youga.recyclerview.adapter;
 
 
+import android.content.Context;
+import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import android.view.ViewGroup.LayoutParams;
@@ -19,6 +23,8 @@ import android.view.ViewGroup.LayoutParams;
 import com.youga.recyclerview.R;
 import com.youga.recyclerview.DragRecyclerView.OnDragListener;
 import com.youga.recyclerview.DragRecyclerView.OnItemClickListener;
+import com.youga.recyclerview.model.Fill;
+import com.youga.recyclerview.model.Foot;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -30,214 +36,183 @@ import java.lang.annotation.RetentionPolicy;
 public class RecyclerAdapter extends RecyclerWrapper {
 
     private static final String TAG = "RecyclerAdapter";
-    private final Handler mHandler;
-    private String[] mTips = new String[2];
+    //是否再加更多
+    private final boolean mLoadMore;
+    private RecyclerView.LayoutManager mLayoutManager;
+    //是否还有更多数据
+    private boolean mShouldMore;
+    private final Context mContext;
     private DisplayMetrics mMetrics;
 
-    //STATE_DEFAULT is show Item
-    public static final int STATE_DEFAULT = -904291158;
-    public static final int STATE_LOADING = 904291159;
-    public static final int STATE_EMPTY = 904291160;
-    public static final int STATE_ERROR = 904291161;
-    public static final int STATE_FOOT = 904291162;
-
-    @IntDef({FOOT_MORE, FOOT_NOT_MORE, FOOT_FAULT})
-    @Retention(RetentionPolicy.SOURCE)
-    public @interface FootState {
-    }
-
-    public static final int FOOT_MORE = 904291164;
-    public static final int FOOT_NOT_MORE = 904291165;
-    public static final int FOOT_FAULT = 904291166;
-
-    private int mState = STATE_DEFAULT;
-    private int mFootState = FOOT_MORE;
+    public static final int TYPE_ITEM = 160809000;
+    public static final int TYPE_LOADING = 160809001;
+    public static final int TYPE_EMPTY = 160809002;
+    public static final int TYPE_ERROR = 160809003;
+    public static final int TYPE_FOOT_LOAD = 160809004;
+    public static final int TYPE_FOOT_FAULT = 160809005;
 
     private OnDragListener mOnDragListener;
     private OnItemClickListener mOnItemClickListener;
-    private boolean mLoadMore;
     private LayoutParams mLayoutParams;
+    private RecyclerView.Adapter mAdapter;
+    //填充对象
+    private Fill mFill;
+    //foot对象
+    private Foot mFoot;
 
-    public RecyclerAdapter(@NonNull RecyclerView.Adapter<RecyclerView.ViewHolder> wrapped, boolean loadMore) {
-        super(wrapped);
-        this.mLoadMore = loadMore;
-        mHandler = new Handler(Looper.getMainLooper());
-    }
 
-    private void setState(int state) {
-        this.mState = state;
-        getWrappedAdapter().notifyDataSetChanged();
-        notifyDataSetChanged();
-    }
-
-    public void showLoadingView() {
-        setState(STATE_LOADING);
-    }
-
-    public void showEmptyView(@NonNull String emptyTips) {
-        mTips[0] = emptyTips;
-        setState(STATE_EMPTY);
-    }
-
-    public void showErrorView(@NonNull String errorTips) {
-        mTips[1] = errorTips;
-        setState(STATE_ERROR);
-    }
-
-    public void showItemView() {
-        setState(STATE_DEFAULT);
+    public RecyclerAdapter(@NonNull RecyclerView.Adapter adapter, Context context,
+                           boolean loadMore) {
+        super(adapter);
+        mContext = context;
+        mMetrics = context.getResources().getDisplayMetrics();
+        mLoadMore = loadMore;
+        mAdapter = adapter;
     }
 
     @Override
     public int getItemCount() {
-        switch (mState) {
-            case STATE_LOADING:
-            case STATE_EMPTY:
-            case STATE_ERROR:
-                return 1;
-            default:
-                return mLoadMore && mFootState != FOOT_NOT_MORE && getSuperItemCount() > 0 ? getSuperItemCount() + 1 : getSuperItemCount();
+        if (mFill != null) {
+            return 1;
+        } else {
+            return mLoadMore & mShouldMore ? mAdapter.getItemCount() + 1 : mAdapter.getItemCount();
         }
-    }
-
-    public int getSuperItemCount() {
-        return super.getItemCount();
     }
 
     @Override
     public int getItemViewType(int position) {
-        switch (mState) {
-            case STATE_LOADING:
-            case STATE_EMPTY:
-            case STATE_ERROR:
-                return mState;
-            default:
-                return mLoadMore && position == getSuperItemCount() ? STATE_FOOT : super.getItemViewType(position);
+        if (position == 0 && mFill != null) {
+            return mFill.getViewType();
+        } else if (position == mAdapter.getItemCount()) {
+            return mFoot.getViewType();
+        } else {
+            return TYPE_ITEM;
         }
     }
 
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        mMetrics = parent.getResources().getDisplayMetrics();
-        switch (viewType) {
-            case STATE_LOADING:
-                return new LoadingViewHolder(View.inflate(parent.getContext(), R.layout.loading, null));
-            case STATE_EMPTY:
-                return new EmptyViewHolder(View.inflate(parent.getContext(), R.layout.empty, null));
-            case STATE_ERROR:
-                return new ErrorViewHolder(View.inflate(parent.getContext(), R.layout.error, null));
-            case STATE_FOOT:
-                return new FootViewHolder(View.inflate(parent.getContext(), R.layout.foot_view, null));
-            default:
-                return super.onCreateViewHolder(parent, viewType);
+        if (viewType == TYPE_LOADING || viewType == TYPE_EMPTY || viewType == TYPE_ERROR) {
+            return new FillViewHolder(View.inflate(parent.getContext(), R.layout.fill_view, null));
+        } else if (viewType == TYPE_FOOT_LOAD || viewType == TYPE_FOOT_FAULT) {
+            return new FootViewHolder(View.inflate(parent.getContext(), R.layout.foot_view, null));
+        } else {
+            return mAdapter.onCreateViewHolder(parent, viewType);
         }
     }
 
     @Override
     public void onBindViewHolder(final RecyclerView.ViewHolder holder, final int position) {
-        if (holder instanceof LoadingViewHolder
-                || holder instanceof EmptyViewHolder
-                || holder instanceof ErrorViewHolder) {
-            Log.i(TAG, "holder-->" + holder.getClass().getSimpleName());
+        if (holder instanceof FillViewHolder) {
             LayoutParams params = getLayoutParams();
             if (params != null) holder.itemView.setLayoutParams(params);
+            FillViewHolder fillHolder = (FillViewHolder) holder;
+            fillHolder.bindView(mFill);
         } else if (holder instanceof FootViewHolder) {
-            int height = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 40, mMetrics);
-            LayoutParams params = new LayoutParams(getLayoutParams().width, height);
-            holder.itemView.setLayoutParams(params);
+            int height = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 48, mMetrics);
             FootViewHolder footHolder = (FootViewHolder) holder;
-            switch (mFootState) {
-                case FOOT_MORE:
-                    footHolder.load();
-                    Log.i(TAG, " footHolder.load()");
-                    break;
-                case FOOT_FAULT:
-                    footHolder.fault();
-                    Log.i(TAG, " footHolder.fault()");
-                    break;
+            footHolder.bindView(mFoot);
+            if (mLayoutManager instanceof StaggeredGridLayoutManager) {
+                StaggeredGridLayoutManager.LayoutParams params = new StaggeredGridLayoutManager.LayoutParams(getLayoutParams().width, height);
+                params.setFullSpan(true);
+                holder.itemView.setLayoutParams(params);
+            } else {
+                LayoutParams params = new LayoutParams(getLayoutParams().width, height);
+                holder.itemView.setLayoutParams(params);
             }
         } else {
             if (mOnItemClickListener != null)
                 holder.itemView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        mOnItemClickListener.onItemClick(holder.itemView, position);
+                        mOnItemClickListener.onItemClick(holder.itemView, holder.getAdapterPosition());
                     }
                 });
-            super.onBindViewHolder(holder, position);
+            mAdapter.onBindViewHolder(holder, position);
         }
     }
 
-    public class LoadingViewHolder extends RecyclerView.ViewHolder {
-
-        public LoadingViewHolder(View itemView) {
-            super(itemView);
-        }
+    public void showView(Fill fill) {
+        mFill = fill;
+        mShouldMore = true;
+        notifyDataSetChanged();
+        getWrappedAdapter().notifyDataSetChanged();
     }
 
-    public class EmptyViewHolder extends RecyclerView.ViewHolder {
-        private final TextView emptyTips;
-
-        public EmptyViewHolder(View itemView) {
-            super(itemView);
-            emptyTips = (TextView) itemView.findViewById(R.id.empty_tips);
-            emptyTips.setText(mTips[0]);
-        }
+    public void showFoot(Foot foot) {
+        mFill = null;
+        mFoot = foot;
+        if (foot == null) mShouldMore = false;
+        notifyDataSetChanged();
+        getWrappedAdapter().notifyDataSetChanged();
     }
 
-    public class ErrorViewHolder extends RecyclerView.ViewHolder {
-        private final TextView errorTips;
+    public class FillViewHolder extends RecyclerView.ViewHolder {
 
-        public ErrorViewHolder(View itemView) {
+        private final TextView mTipsView;
+        private final ProgressBar mPbLoading;
+
+        public FillViewHolder(View itemView) {
             super(itemView);
-            errorTips = (TextView) itemView.findViewById(R.id.error_tips);
-            errorTips.setText(mTips[1]);
+            mTipsView = (TextView) itemView.findViewById(R.id.tips_view);
+            mPbLoading = (ProgressBar) itemView.findViewById(R.id.pb_loading);
+        }
+
+        public void bindView(Fill fill) {
+            if (fill.getViewType() == TYPE_LOADING) {
+                mPbLoading.setVisibility(View.VISIBLE);
+                mTipsView.setVisibility(View.INVISIBLE);
+            } else {
+                mPbLoading.setVisibility(View.INVISIBLE);
+                mTipsView.setVisibility(View.VISIBLE);
+                Drawable top = mContext.getResources().getDrawable(fill.getIconId());
+                if (top != null)
+                    top.setBounds(0, 0, top.getIntrinsicWidth(), top.getIntrinsicHeight());
+                mTipsView.setCompoundDrawables(null, top, null, null);
+                mTipsView.setText(fill.getTips());
+            }
         }
     }
 
     public class FootViewHolder extends RecyclerView.ViewHolder {
-        private LinearLayout mFootViewLoading, mFootViewFault;
+        private LinearLayout mViewLoading, mViewFault;
 
         public FootViewHolder(View itemView) {
             super(itemView);
-            mFootViewLoading = (LinearLayout) itemView.findViewById(R.id.footView_loading);
-            mFootViewFault = (LinearLayout) itemView.findViewById(R.id.footView_fault);
+            mViewLoading = (LinearLayout) itemView.findViewById(R.id.view_loading);
+            mViewFault = (LinearLayout) itemView.findViewById(R.id.view_fault);
+        }
 
-            mFootViewFault.setOnClickListener(new View.OnClickListener() {
+        public void bindView(final Foot foot) {
+            if (foot.getViewType() == TYPE_FOOT_LOAD) {
+                showLoad(foot);
+            } else {
+                foot.setLoading(false);
+                mViewLoading.setVisibility(View.INVISIBLE);
+                mViewFault.setVisibility(View.VISIBLE);
+            }
+
+            mViewFault.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    load();
+                    showLoad(foot);
                 }
             });
         }
 
-        public void load() {
-            bindLoadMore();
-            mFootState = -904291163;//loading
-            mFootViewLoading.setVisibility(View.VISIBLE);
-            mFootViewFault.setVisibility(View.INVISIBLE);
-        }
-
-        public void fault() {
-            mFootViewLoading.setVisibility(View.INVISIBLE);
-            mFootViewFault.setVisibility(View.VISIBLE);
-        }
-
-        public void bindLoadMore() {
-            if (mOnDragListener != null)
-                mHandler.postDelayed(new Runnable() {
+        private void showLoad(Foot foot) {
+            mViewLoading.setVisibility(View.VISIBLE);
+            mViewFault.setVisibility(View.INVISIBLE);
+            if (!foot.isLoading()) {
+                foot.setLoading(true);
+                mViewLoading.postDelayed(new Runnable() {
                     @Override
                     public void run() {
                         mOnDragListener.onLoadMore();
                     }
                 }, 1000);
+            }
         }
-    }
-
-    public void setFootState(@FootState int state) {
-        this.mFootState = state;
-        getWrappedAdapter().notifyDataSetChanged();
-        notifyDataSetChanged();
     }
 
     public void setOnDragListener(OnDragListener onDragListener) {
@@ -254,9 +229,13 @@ public class RecyclerAdapter extends RecyclerWrapper {
 
     public void setLayoutParams(int width, int height) {
         if (mLayoutParams == null) {
-            this.mLayoutParams = new LayoutParams(width, height);
-            getWrappedAdapter().notifyDataSetChanged();
+            mLayoutParams = new LayoutParams(width, height);
             notifyDataSetChanged();
+            getWrappedAdapter().notifyDataSetChanged();
         }
+    }
+
+    public void setLayoutManager(RecyclerView.LayoutManager layoutManager) {
+        mLayoutManager = layoutManager;
     }
 }

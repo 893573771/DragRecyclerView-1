@@ -1,22 +1,18 @@
 package com.youga.recyclerview.adapter;
 
-/**
- * Created by Youga on 2015/9/2.
- */
-
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.RecyclerView.Adapter;
-import android.support.v7.widget.RecyclerView.AdapterDataObserver;
-import android.support.v7.widget.RecyclerView.ViewHolder;
 import android.view.ViewGroup;
 
-public class RecyclerWrapper extends Adapter {
+/**
+ * Created by YougaKing on 2016/8/11.
+ */
+public class RecyclerWrapper extends RecyclerView.Adapter {
 
-    private final Adapter<ViewHolder> wrapped;
+    private final RecyclerView.Adapter<RecyclerView.ViewHolder> mAdapter;
 
-    public RecyclerWrapper(Adapter<ViewHolder> wrapped) {
-        this.wrapped = wrapped;
-        this.wrapped.registerAdapterDataObserver(new AdapterDataObserver() {
+    public RecyclerWrapper(RecyclerView.Adapter<RecyclerView.ViewHolder> adapter) {
+        mAdapter = adapter;
+        mAdapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
             public void onChanged() {
                 RecyclerWrapper.this.notifyDataSetChanged();
             }
@@ -39,63 +35,77 @@ public class RecyclerWrapper extends Adapter {
         });
     }
 
-    public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        return this.wrapped.onCreateViewHolder(parent, viewType);
+    @Override
+    public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        return mAdapter.onCreateViewHolder(parent, viewType);
     }
 
-    public void onBindViewHolder(ViewHolder holder, int position) {
-        this.wrapped.onBindViewHolder(holder, position);
+    @Override
+    public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
+        mAdapter.bindViewHolder(holder, position);
     }
 
+    @Override
     public int getItemCount() {
-        return this.wrapped.getItemCount();
+        return mAdapter.getItemCount();
     }
 
+    @Override
     public int getItemViewType(int position) {
-        return this.wrapped.getItemViewType(position);
+        return mAdapter.getItemViewType(position);
     }
 
+    @Override
     public void setHasStableIds(boolean hasStableIds) {
-        this.wrapped.setHasStableIds(hasStableIds);
+        mAdapter.setHasStableIds(hasStableIds);
     }
 
+    @Override
     public long getItemId(int position) {
-        return this.wrapped.getItemId(position);
+        return mAdapter.getItemId(position);
     }
 
-    public void onViewRecycled(ViewHolder holder) {
-        this.wrapped.onViewRecycled(holder);
+    @Override
+    public void onViewRecycled(RecyclerView.ViewHolder holder) {
+        mAdapter.onViewRecycled(holder);
     }
 
-    public boolean onFailedToRecycleView(ViewHolder holder) {
-        return this.wrapped.onFailedToRecycleView(holder);
+    @Override
+    public boolean onFailedToRecycleView(RecyclerView.ViewHolder holder) {
+        return mAdapter.onFailedToRecycleView(holder);
     }
 
-    public void onViewAttachedToWindow(ViewHolder holder) {
-        this.wrapped.onViewAttachedToWindow(holder);
+    @Override
+    public void onViewAttachedToWindow(RecyclerView.ViewHolder holder) {
+        mAdapter.onViewAttachedToWindow(holder);
     }
 
-    public void onViewDetachedFromWindow(ViewHolder holder) {
-        this.wrapped.onViewDetachedFromWindow(holder);
+    @Override
+    public void onViewDetachedFromWindow(RecyclerView.ViewHolder holder) {
+        mAdapter.onViewDetachedFromWindow(holder);
     }
 
-    public void registerAdapterDataObserver(AdapterDataObserver observer) {
-        this.wrapped.registerAdapterDataObserver(observer);
+    @Override
+    public void registerAdapterDataObserver(RecyclerView.AdapterDataObserver observer) {
+        mAdapter.registerAdapterDataObserver(observer);
     }
 
-    public void unregisterAdapterDataObserver(AdapterDataObserver observer) {
-        this.wrapped.unregisterAdapterDataObserver(observer);
+    @Override
+    public void unregisterAdapterDataObserver(RecyclerView.AdapterDataObserver observer) {
+        mAdapter.unregisterAdapterDataObserver(observer);
     }
 
+    @Override
     public void onAttachedToRecyclerView(RecyclerView recyclerView) {
-        this.wrapped.onAttachedToRecyclerView(recyclerView);
+        mAdapter.onAttachedToRecyclerView(recyclerView);
     }
 
+    @Override
     public void onDetachedFromRecyclerView(RecyclerView recyclerView) {
-        this.wrapped.onDetachedFromRecyclerView(recyclerView);
+        mAdapter.onDetachedFromRecyclerView(recyclerView);
     }
 
-    public Adapter<ViewHolder> getWrappedAdapter() {
-        return this.wrapped;
+    public RecyclerView.Adapter<RecyclerView.ViewHolder> getWrappedAdapter() {
+        return mAdapter;
     }
 }

@@ -1,23 +1,25 @@
 package com.youga.sample;
 
 import android.content.Context;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by WuXiaolong on 2015/7/2.
+ * Created by YougaKing on 2016/8/11.
  */
-public class RecyclerViewAdapter extends BaseAdapter {
+public class StaggeredGridAdapter extends BaseAdapter {
 
-    public RecyclerViewAdapter(Context context, List<String> dataList) {
-        super(context,dataList);
+    private final boolean mRandom;
+
+    public StaggeredGridAdapter(Context context, List<String> dataList, boolean random) {
+        super(context, dataList);
+        mRandom = random;
         mContext = context;
     }
 
@@ -30,17 +32,27 @@ public class RecyclerViewAdapter extends BaseAdapter {
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
         ViewHolder viewHolder = (ViewHolder) holder;
-        viewHolder.title.setText(mStringList.get(position));
+        viewHolder.bindView(position);
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
         public TextView title;
+        private CardView mCardView;
 
         public ViewHolder(View itemView) {
             super(itemView);
             title = (TextView) itemView.findViewById(R.id.title);
+            mCardView = (CardView) itemView.findViewById(R.id.card_view);
+        }
+
+        public void bindView(int position) {
+            if (mRandom) {
+                ViewGroup.LayoutParams lp = mCardView.getLayoutParams();
+                lp.height = (int) (200 + Math.random() * 300);
+                mCardView.setLayoutParams(lp);
+            }
+            title.setText(mStringList.get(position));
+
         }
     }
-
-
 }
