@@ -9,18 +9,54 @@
 <dependency>
   <groupId>com.youga.recyclerview</groupId>
   <artifactId>dragrecyclerview</artifactId>
-  <version>1.0.0</version>
+  <version>1.1.0</version>
   <type>pom</type>
 </dependency>
 ```
 * or Gradle:
-```xml
-compile 'com.youga.recyclerview:dragrecyclerview:1.0.0'
+```
+compile 'com.youga.recyclerview:dragrecyclerview:1.1.0'
+```
+#### 代码片段
+```
+ if (id == R.id.lm_hor) {
+     mAdapter = new RecyclerViewAdapter(this, null);
+     mDragRecyclerView.setAdapter(mAdapter, true, new LinearLayoutManager(this,
+             LinearLayoutManager.HORIZONTAL, false));
+ } else if (id == R.id.lm_ver) {
+     mAdapter = new RecyclerViewAdapter(this, null);
+     mDragRecyclerView.setAdapter(mAdapter, true, new LinearLayoutManager(this,
+             LinearLayoutManager.VERTICAL, false));
+ } else if (id == R.id.glm_hor) {
+     mAdapter = new StaggeredGridAdapter(this, null, false);
+     mDragRecyclerView.setAdapter(mAdapter, true, new GridLayoutManager(this, 4,
+             GridLayoutManager.HORIZONTAL, false));
+ } else if (id == R.id.glm_ver) {
+     mAdapter = new StaggeredGridAdapter(this, null, false);
+     mDragRecyclerView.setAdapter(mAdapter, true, new GridLayoutManager(this, 4,
+             GridLayoutManager.VERTICAL, false));
+ } else if (id == R.id.sglm_hor) {
+     mAdapter = new StaggeredGridAdapter(this, null, true);
+     mDragRecyclerView.setAdapter(mAdapter, true,
+             new StaggeredGridLayoutManager(4, StaggeredGridLayoutManager.HORIZONTAL));
+ } else if (id == R.id.sglm_ver) {
+     mAdapter = new StaggeredGridAdapter(this, null, true);
+     mDragRecyclerView.setAdapter(mAdapter, true,
+             new StaggeredGridLayoutManager(4, StaggeredGridLayoutManager.VERTICAL));
+ }
+
 ```
 
+
+#### 功能
+* RecyclerView 加载更多,可搭配SwipeRefreshLayout 下拉刷新
+* 支持EmptyView loading error 图片文字可自定义
+* 支持LinearLayoutManager GridLayoutManager StaggeredGridLayoutManager
+* 支持HORIZONTAL VERTICAL
+
 #### 版本
-* versionCode 1
-* versionName '1.0.0'
+* versionCode 2
+* versionName '1.1.0'
 
 # 关于作者
 * QQ交流群:158506055
