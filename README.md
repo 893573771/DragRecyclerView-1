@@ -1,7 +1,11 @@
 # DragRecyclerView
 
 
-![主页](https://github.com/YougaKing/SwipeRecyclerView/blob/master/haha.gif)
+![主页](https://github.com/YougaKing/SwipeRecyclerView/blob/master/Res/grid.png)
+![主页](https://github.com/YougaKing/SwipeRecyclerView/blob/master/Res/stage_grid.png)
+![主页](https://github.com/YougaKing/SwipeRecyclerView/blob/master/Res/haha.gif)
+
+Demo演示 [下载](https://github.com/YougaKing/SwipeRecyclerView/blob/master/Res/app-release.apk)
 
 #### Download
 * Download the latest JAR or grab via Maven:
