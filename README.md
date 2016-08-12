@@ -59,8 +59,8 @@ compile 'com.youga.recyclerview:dragrecyclerview:1.1.0'
 * 支持HORIZONTAL VERTICAL
 
 #### 版本
-* versionCode 2
-* versionName '1.1.0'
+* versionCode 3
+* versionName '1.1.1'
 
 # 关于作者
 * QQ交流群:158506055

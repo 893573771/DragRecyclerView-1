@@ -112,6 +112,12 @@ public class DragRecyclerView extends RecyclerView {
         adapter.showView(new Fill(errorTips, RecyclerAdapter.TYPE_ERROR, resId));
     }
 
+    //method nothing do
+    @Deprecated
+    public void showItemView() {
+
+    }
+
     public void onDragState(int resultCount) {
         RecyclerAdapter adapter = (RecyclerAdapter) getAdapter();
         if (resultCount < 0) {
