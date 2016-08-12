@@ -19,7 +19,7 @@ Demo演示 [下载](https://github.com/YougaKing/SwipeRecyclerView/blob/master/R
 ```
 * or Gradle:
 ```
-compile 'com.youga.recyclerview:dragrecyclerview:1.1.0'
+compile 'com.youga.recyclerview:dragrecyclerview:1.1.1'
 ```
 #### 代码片段
 ```
