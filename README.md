@@ -13,7 +13,7 @@ Demo演示 [下载](https://github.com/YougaKing/SwipeRecyclerView/blob/master/R
 <dependency>
   <groupId>com.youga.recyclerview</groupId>
   <artifactId>dragrecyclerview</artifactId>
-  <version>1.1.0</version>
+  <version>1.1.1</version>
   <type>pom</type>
 </dependency>
 ```
