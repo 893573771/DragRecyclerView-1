@@ -44,7 +44,6 @@ public class RecyclerAdapter extends RecyclerWrapper {
     private final Context mContext;
     private DisplayMetrics mMetrics;
 
-    public static final int TYPE_ITEM = 160809000;
     public static final int TYPE_LOADING = 160809001;
     public static final int TYPE_EMPTY = 160809002;
     public static final int TYPE_ERROR = 160809003;
@@ -86,7 +85,7 @@ public class RecyclerAdapter extends RecyclerWrapper {
         } else if (position == mAdapter.getItemCount()) {
             return mFoot.getViewType();
         } else {
-            return TYPE_ITEM;
+            return super.getItemViewType(position);
         }
     }
 
