@@ -14,11 +14,10 @@ import java.util.List;
 /**
  * Created by WuXiaolong on 2015/7/2.
  */
-public class RecyclerViewAdapter extends BaseAdapter {
+public class RecyclerViewAdapter extends BaseAdapter<User> {
 
-    public RecyclerViewAdapter(Context context, List<String> dataList) {
-        super(context,dataList);
-        mContext = context;
+    public RecyclerViewAdapter(Context context) {
+        super(context);
     }
 
     @Override
@@ -30,15 +29,22 @@ public class RecyclerViewAdapter extends BaseAdapter {
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
         ViewHolder viewHolder = (ViewHolder) holder;
-        viewHolder.title.setText(mStringList.get(position));
+        viewHolder.bindPosition(position);
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
-        public TextView title;
+        public TextView title ,mTextView;
 
         public ViewHolder(View itemView) {
             super(itemView);
             title = (TextView) itemView.findViewById(R.id.title);
+            mTextView = (TextView) itemView.findViewById(R.id.tv_position);
+        }
+
+        public void bindPosition(int position) {
+            User user = mList.get(position);
+            title.setText(user.getLogin());
+            mTextView.setText(String.valueOf(position + 1));
         }
     }
 

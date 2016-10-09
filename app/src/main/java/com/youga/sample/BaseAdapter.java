@@ -9,32 +9,30 @@ import java.util.List;
 /**
  * Created by YougaKing on 2016/8/11.
  */
-public abstract class BaseAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+public abstract class BaseAdapter<T> extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     protected String TAG = getClass().getSimpleName();
     protected Context mContext;
-    protected List<String> mStringList;
+    protected List<T> mList = new ArrayList<>();
 
-    protected List<String> getDataList() {
-        return mStringList;
+    protected List<T> getDataList() {
+        return mList;
     }
 
-    public BaseAdapter(Context context, List<String> dataList) {
-        this.mStringList = dataList == null ? new ArrayList<String>() : dataList;
+    public BaseAdapter(Context context) {
         mContext = context;
     }
 
-
     @Override
     public int getItemCount() {
-        return mStringList.size();
+        return mList.size();
     }
 
-    public int getFirstNumber() {
-        return Integer.valueOf(mStringList.get(0));
+    public T getFirstNumber() {
+        return mList.get(0);
     }
 
-    public int getLastNumber() {
-        return Integer.valueOf(mStringList.get(getItemCount() - 1));
+    public T getLastNumber() {
+        return mList.get(getItemCount() - 1);
     }
 }

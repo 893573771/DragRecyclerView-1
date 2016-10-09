@@ -13,14 +13,13 @@ import java.util.List;
 /**
  * Created by YougaKing on 2016/8/11.
  */
-public class StaggeredGridAdapter extends BaseAdapter {
+public class StaggeredGridAdapter extends BaseAdapter<User> {
 
     private final boolean mRandom;
 
-    public StaggeredGridAdapter(Context context, List<String> dataList, boolean random) {
-        super(context, dataList);
+    public StaggeredGridAdapter(Context context, boolean random) {
+        super(context);
         mRandom = random;
-        mContext = context;
     }
 
     @Override
@@ -36,12 +35,13 @@ public class StaggeredGridAdapter extends BaseAdapter {
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
-        public TextView title;
+        public TextView title, mTextView;
         private CardView mCardView;
 
         public ViewHolder(View itemView) {
             super(itemView);
             title = (TextView) itemView.findViewById(R.id.title);
+            mTextView = (TextView) itemView.findViewById(R.id.tv_position);
             mCardView = (CardView) itemView.findViewById(R.id.card_view);
         }
 
@@ -51,7 +51,9 @@ public class StaggeredGridAdapter extends BaseAdapter {
                 lp.height = (int) (200 + Math.random() * 300);
                 mCardView.setLayoutParams(lp);
             }
-            title.setText(mStringList.get(position));
+            mTextView.setText(String.valueOf(position + 1));
+            User user = mList.get(position);
+            title.setText(user.getLogin());
 
         }
     }

@@ -19,19 +19,22 @@ import android.view.MenuItem;
 import android.widget.Toast;
 
 
+import com.google.gson.reflect.TypeToken;
 import com.youga.recyclerview.DragRecyclerView;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
+    static final String REFRESH = "REFRESH", LOAD_MORE = "LOAD_MORE";
     private DragRecyclerView mDragRecyclerView;
-    private BaseAdapter mAdapter;
+    private BaseAdapter<User> mAdapter;
     private Toolbar toolbar;
-    private boolean notMore;
     private SwipeRefreshLayout mSwipeRefreshLayout;
+    private boolean mNotMore;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,8 +61,8 @@ public class MainActivity extends AppCompatActivity
             public boolean onMenuItemClick(MenuItem item) {
                 switch (item.getItemId()) {
                     case R.id.refresh:
-                        notMore = false;
-                        getData("NULL");
+                        mNotMore = false;
+                        requestList(REFRESH, 0);
                         mDragRecyclerView.showLoadingView();//加载显示ProgressBar
                         break;
                     case R.id.empty:
@@ -71,9 +74,8 @@ public class MainActivity extends AppCompatActivity
                         mDragRecyclerView.showErrorView("网络连接错误", R.mipmap.ic_launcher);//显示请求错误时显示
                         break;
                     case R.id.not_more:
-                        mDragRecyclerView.showLoadingView();//加载显示ProgressBar
-                        notMore = true;
-                        getData("NULL");
+                        mNotMore = true;
+                        mDragRecyclerView.scrollToPosition(mAdapter.getItemCount() - 1);
                         break;
                 }
                 return false;
@@ -83,32 +85,29 @@ public class MainActivity extends AppCompatActivity
         mDragRecyclerView = (DragRecyclerView) findViewById(R.id.dragRecyclerView);
         mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipeRefreshLayout);
 
-        mAdapter = new RecyclerViewAdapter(this, null);
+        mAdapter = new RecyclerViewAdapter(this);
 
 //        mDragRecyclerView.setAdapter(mAdapter); 不执行加载更多 默认设置LinearLayoutManager VERTICAL
 //        mDragRecyclerView.setAdapter(mAdapter,boolean b); b==true?执行加载更多:不执行加载更多 默认设置LinearLayoutManager VERTICAL
 //        mDragRecyclerView.setAdapter(mAdapter,boolean b,LayoutManager manager); b==true?执行加载更多:不执行加载更多 manager 自己设置 LayoutManager
         mDragRecyclerView.setAdapter(mAdapter, true, new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
         mDragRecyclerView.showLoadingView();//加载显示ProgressBar
-        mDragRecyclerView.setRequestCount(10);//设置每次请求的数量,默认10
-        getData("NULL");
+        mDragRecyclerView.setRequestCount(5);//设置每次请求的数量,默认10
+
+        requestList(REFRESH, 0);
 
         mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                if (mAdapter.getItemCount() == 0) {
-                    getData("NULL");
-                } else {
-                    getData("UP");
-                }
+                mNotMore = false;
+                requestList(REFRESH, 0);
             }
         });
 
         mDragRecyclerView.setOnDragListener(new DragRecyclerView.OnDragListener() {
             @Override
             public void onLoadMore() {
-                notMore = false;
-                getData("DOWN");
+                onDrag();
             }
         });
 
@@ -121,71 +120,53 @@ public class MainActivity extends AppCompatActivity
         });
     }
 
-    /**
-     * 模拟网络请求
-     *
-     * @param action 请求动作
-     */
-    private void getData(final String action) {
-        if (!"DOWN".equals(action)) {
-            mSwipeRefreshLayout.setEnabled(false);
-            mSwipeRefreshLayout.setRefreshing(true);
-        }
-        mSwipeRefreshLayout.postDelayed(new Runnable() {
+    private void onDrag() {
+        User user = mAdapter.getLastNumber();
+        requestList(LOAD_MORE, user.getId());
+    }
+
+
+    void requestList(final String type, int since) {
+        Type typeToken = new TypeToken<List<User>>() {
+        }.getType();
+        HttpUtil.getAllUsers(LOAD_MORE.equals(type) ? since : 0, typeToken, new HttpCallback<List<User>>() {
             @Override
-            public void run() {
-                switch (action) {
-                    case "NULL"://刷新
-                        List<String> list = setList(0);
-                        mAdapter.getDataList().clear();
-                        mAdapter.getDataList().addAll(list);
-                        mDragRecyclerView.onDragState(list.size());//传入请求结果的个数,自动判断是否还有更多数据
-                        if (list.size() == 0) {
-                            mDragRecyclerView.showEmptyView("神马都没有");//显示请求结果为空时显示
-                        } else {
-                            mAdapter.getDataList().addAll(0, list);
-                            mAdapter.notifyDataSetChanged();
-                        }
-                        //如果请求失败
-                        //mDragRecyclerView.showErrorView("网络连接错误");//显示请求错误时显示
+            public void onFailure(String message) {
+                switch (type) {
+                    case REFRESH:
+                        mSwipeRefreshLayout.setEnabled(true);
+                        mSwipeRefreshLayout.setRefreshing(false);
+                        showToast(message);
                         break;
-                    case "UP"://请求新的数据 动作下拉
-                        list = setUpList(mAdapter.getFirstNumber());
-                        mAdapter.getDataList().addAll(0, list);
-                        mAdapter.notifyDataSetChanged();
+                    case LOAD_MORE:
+                        showToast(message);
+                        mDragRecyclerView.onDragState(-1);
                         break;
-                    case "DOWN"://加载更多 动作上滑
-                        list = setList(mAdapter.getLastNumber() + 1);
-                        mAdapter.getDataList().addAll(list);
-                        mDragRecyclerView.onDragState(list.size());//传入请求结果的个数,自动判断是否还有更多数据
-                        //如果请求失败
-                        //mDragRecyclerView.onDragState(-1)
-                        //footer 可点击继续请求
-                        break;
-                }
-                if (!"DOWN".equals(action)) {
-                    mSwipeRefreshLayout.setEnabled(true);
-                    mSwipeRefreshLayout.setRefreshing(false);
                 }
             }
-        }, 1000);
 
-    }
-
-    private List<String> setList(int start) {
-        List<String> dataList = new ArrayList<>();
-        for (int i = start; i < (notMore ? 9 : 10 + start); i++) {
-            dataList.add(String.valueOf(i));
-        }
-        return dataList;
-    }
-
-    private List<String> setUpList(int start) {
-        List<String> dataList = new ArrayList<>();
-        for (int i = start - 10; i < 10; i++) {
-            dataList.add(String.valueOf(i));
-        }
-        return dataList;
+            @Override
+            public void onResponse(List<User> users, String message) {
+                switch (type) {
+                    case REFRESH:
+                        mSwipeRefreshLayout.setEnabled(true);
+                        mSwipeRefreshLayout.setRefreshing(false);
+                        mAdapter.getDataList().clear();
+                        mAdapter.getDataList().addAll(users);
+                        mDragRecyclerView.onDragState(users.size());//传入请求结果的个数,自动判断是否还有更多数据
+                        mAdapter.notifyDataSetChanged();
+                        if (users.size() == 0) {
+                            mDragRecyclerView.showEmptyView("神马都没有");//显示请求结果为空时显示
+                        }
+                        break;
+                    case LOAD_MORE:
+                        if (mNotMore) users.remove(0);
+                        mAdapter.getDataList().addAll(users);
+                        mDragRecyclerView.onDragState(users.size());//传入请求结果的个数,自动判断是否还有更多数据
+                        break;
+                }
+            }
+        });
     }
 
     @Override
@@ -210,38 +191,38 @@ public class MainActivity extends AppCompatActivity
     public boolean onNavigationItemSelected(MenuItem item) {
         int id = item.getItemId();
         if (id == R.id.lm_hor) {
-            mAdapter = new RecyclerViewAdapter(this, null);
+            mAdapter = new RecyclerViewAdapter(this);
             mDragRecyclerView.setAdapter(mAdapter, true, new LinearLayoutManager(this,
                     LinearLayoutManager.HORIZONTAL, false));
         } else if (id == R.id.lm_ver) {
-            mAdapter = new RecyclerViewAdapter(this, null);
+            mAdapter = new RecyclerViewAdapter(this);
             mDragRecyclerView.setAdapter(mAdapter, true, new LinearLayoutManager(this,
                     LinearLayoutManager.VERTICAL, false));
         } else if (id == R.id.glm_hor) {
-            mAdapter = new StaggeredGridAdapter(this, null, false);
+            mAdapter = new StaggeredGridAdapter(this, false);
             mDragRecyclerView.setAdapter(mAdapter, true, new GridLayoutManager(this, 4,
                     GridLayoutManager.HORIZONTAL, false));
         } else if (id == R.id.glm_ver) {
-            mAdapter = new StaggeredGridAdapter(this, null, false);
+            mAdapter = new StaggeredGridAdapter(this, false);
             mDragRecyclerView.setAdapter(mAdapter, true, new GridLayoutManager(this, 4,
                     GridLayoutManager.VERTICAL, false));
         } else if (id == R.id.sglm_hor) {
-            mAdapter = new StaggeredGridAdapter(this, null, true);
+            mAdapter = new StaggeredGridAdapter(this, true);
             mDragRecyclerView.setAdapter(mAdapter, true,
                     new StaggeredGridLayoutManager(4, StaggeredGridLayoutManager.HORIZONTAL));
         } else if (id == R.id.sglm_ver) {
-            mAdapter = new StaggeredGridAdapter(this, null, true);
+            mAdapter = new StaggeredGridAdapter(this, true);
             mDragRecyclerView.setAdapter(mAdapter, true,
                     new StaggeredGridLayoutManager(4, StaggeredGridLayoutManager.VERTICAL));
         }
         mDragRecyclerView.showLoadingView();
-        getData("NULL");
+        mNotMore = false;
+        requestList(REFRESH, 0);
 
         mDragRecyclerView.setOnDragListener(new DragRecyclerView.OnDragListener() {
             @Override
             public void onLoadMore() {
-                notMore = false;
-                getData("DOWN");
+                onDrag();
             }
         });
 
@@ -256,5 +237,9 @@ public class MainActivity extends AppCompatActivity
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    void showToast(String message) {
+        Snackbar.make(toolbar, message, Snackbar.LENGTH_SHORT).show();
     }
 }

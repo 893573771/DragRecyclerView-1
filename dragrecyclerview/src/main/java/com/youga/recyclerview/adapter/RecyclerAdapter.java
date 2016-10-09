@@ -141,7 +141,7 @@ public class RecyclerAdapter extends RecyclerWrapper {
     public void showFoot(Foot foot) {
         mFill = null;
         mFoot = foot;
-        if (foot == null) mShouldMore = false;
+        mShouldMore = foot != null;
         notifyDataSetChanged();
         getWrappedAdapter().notifyDataSetChanged();
     }

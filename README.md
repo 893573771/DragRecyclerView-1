@@ -13,13 +13,13 @@ Demo演示 [下载](https://github.com/YougaKing/DragRecyclerView/blob/master/Re
 <dependency>
   <groupId>com.youga.recyclerview</groupId>
   <artifactId>dragrecyclerview</artifactId>
-  <version>1.1.2</version>
+  <version>1.1.3</version>
   <type>pom</type>
 </dependency>
 ```
 * or Gradle:
 ```
-compile 'com.youga.recyclerview:dragrecyclerview:1.1.2'
+compile 'com.youga.recyclerview:dragrecyclerview:1.1.3'
 ```
 #### 代码片段
 ```
@@ -61,7 +61,7 @@ compile 'com.youga.recyclerview:dragrecyclerview:1.1.2'
 #### 版本
 * gradlew bintrayupload
 * versionCode 4
-* versionName '1.1.2'
+* versionName '1.1.3'
 
 # 关于作者
 * QQ交流群:158506055
